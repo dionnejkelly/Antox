@@ -10,12 +10,15 @@ import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.os.{Build, Bundle}
 import android.preference.PreferenceManager
+import android.support.design.widget.NavigationView
+import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener
 import android.support.v4.app.ActivityCompat
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.{ActionBarDrawerToggle, AppCompatActivity}
 import android.support.v7.widget.Toolbar
-import android.view.{MenuItem, View, WindowManager}
+import android.view.{Gravity, MenuItem, View, WindowManager}
+import android.support.annotation.IntDef
 import android.widget.{AdapterView, ListView, Toast}
 import im.tox.antox.data.{AntoxDB, State}
 import im.tox.antox.tox.ToxSingleton
@@ -32,9 +35,68 @@ class MainActivity extends AppCompatActivity {
 
   private var mToolbar: Toolbar = _
 
-  private var mDrawerList: ListView = _
+  private var mNavigationView: NavigationView = _
 
   private var mDrawerToggle: ActionBarDrawerToggle = _
+
+
+  private def selectItem(menuItem: MenuItem) {
+    val position = menuItem.getItemId
+
+    if (position == 0) {
+      val intent = new Intent(this, classOf[ProfileSettingsActivity])
+      startActivity(intent)
+    } else if (position == 1) {
+      val intent = new Intent(this, classOf[SettingsActivity])
+      startActivity(intent)
+    } else if (position == 2) {
+      //TODO: uncomment for the future
+      /* val dialog = new CreateGroupDialog(this)
+      dialog.addCreateGroupListener(new CreateGroupListener {
+        override def groupCreationConfimed(name: String): Unit = {
+          val groupNumber = ToxSingleton.tox.newGroup(name)
+          val groupId = ToxSingleton.tox.getGroupChatId(groupNumber)
+          val db = new AntoxDB(getApplicationContext)
+
+          db.addGroup(groupId, name, "")
+          db.close()
+          ToxSingleton.updateGroupList(getApplicationContext)
+        }
+      })
+      dialog.showDialog()
+      */
+      Toast.makeText(this, getResources.getString(R.string.main_group_coming_soon), Toast.LENGTH_LONG)
+        .show()
+
+    } else if (position == 3) {
+      val intent = new Intent(this, classOf[AboutActivity])
+      startActivity(intent)
+    } else if (position == 4) {
+      State.logout(this)
+    }
+    menuItem.setChecked(true)
+    mDrawerLayout.closeDrawer(mNavigationView)
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = {
+    val id = item.getItemId
+    if (id == android.R.id.home) {
+      if (mDrawerToggle.onOptionsItemSelected(item)) {
+        return true
+      }
+    }
+    super.onOptionsItemSelected(item)
+  }
+
+  protected override def onPostCreate(savedInstanceState: Bundle) {
+    super.onPostCreate(savedInstanceState)
+    mDrawerToggle.syncState()
+  }
+
+  override def onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    mDrawerToggle.onConfigurationChanged(newConfig)
+  }
 
   protected override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -53,17 +115,14 @@ class MainActivity extends AppCompatActivity {
     // Set up the navigation drawer
     mToolbar = findViewById(R.drawable.ic_navigation_drawer).asInstanceOf[Toolbar]
     mDrawerLayout = findViewById(R.id.drawer_layout).asInstanceOf[DrawerLayout]
-    mDrawerList = findViewById(R.id.left_drawer).asInstanceOf[ListView]
-    mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START)
-    val list = new util.ArrayList[DrawerItem]()
-    list.add(new DrawerItem(getString(R.string.n_profile_options), R.drawable.ic_person_add_white_24dp))
-    list.add(new DrawerItem(getString(R.string.n_settings), R.drawable.ic_settings_white_24dp))
-    list.add(new DrawerItem(getString(R.string.n_create_group), R.drawable.ic_group_add_white_24dp))
-    list.add(new DrawerItem(getString(R.string.n_about), R.drawable.ic_info_outline_white_24dp))
-    list.add(new DrawerItem(getString(R.string.n_logout), R.drawable.ic_arrow_back_white_24dp))
-    val drawerListAdapter = new DrawerArrayAdapter(this, R.layout.rowlayout_drawer, list)
-    mDrawerList.setAdapter(drawerListAdapter)
-    mDrawerList.setOnItemClickListener(new DrawerItemClickListener())
+    mNavigationView = findViewById(R.id.left_drawer).asInstanceOf[NavigationView]
+
+    mNavigationView.setNavigationItemSelectedListener(new OnNavigationItemSelectedListener {
+      override def onNavigationItemSelected(menuItem: MenuItem): Boolean = {
+        selectItem(menuItem)
+        true
+      }
+    })
 
     mDrawerToggle = new ActionBarDrawerToggle(
       this, mDrawerLayout, mToolbar,
@@ -185,47 +244,7 @@ class MainActivity extends AppCompatActivity {
       selectItem(position)
     }
   }
-
-  /**
-   * This method is called by the DrawerItemClickListener above and starts a new activity
-   * based on the item selected
-   */
-  private def selectItem(position: Int) {
-    if (position == 0) {
-      val intent = new Intent(this, classOf[ProfileSettingsActivity])
-      startActivity(intent)
-    } else if (position == 1) {
-      val intent = new Intent(this, classOf[SettingsActivity])
-      startActivity(intent)
-    } else if (position == 2) {
-      //TODO: uncomment for the future
-      /* val dialog = new CreateGroupDialog(this)
-      dialog.addCreateGroupListener(new CreateGroupListener {
-        override def groupCreationConfimed(name: String): Unit = {
-          val groupNumber = ToxSingleton.tox.newGroup(name)
-          val groupId = ToxSingleton.tox.getGroupChatId(groupNumber)
-          val db = new AntoxDB(getApplicationContext)
-
-          db.addGroup(groupId, name, "")
-          db.close()
-          ToxSingleton.updateGroupList(getApplicationContext)
-        }
-      })
-      dialog.showDialog()
-      */
-      Toast.makeText(this, getResources.getString(R.string.main_group_coming_soon), Toast.LENGTH_LONG)
-        .show()
-
-    } else if (position == 3) {
-      val intent = new Intent(this, classOf[AboutActivity])
-      startActivity(intent)
-    } else if (position == 4) {
-      State.logout(this)
-    }
-    mDrawerList.setItemChecked(position, true)
-    mDrawerLayout.closeDrawer(mDrawerList)
-  }
-
+  
   /**
    * Checks to see if Wifi or Mobile have a network connection
    */

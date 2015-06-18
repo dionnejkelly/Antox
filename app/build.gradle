@@ -69,7 +69,7 @@ dependencies {
     compile 'com.shamanland:fab:0.0.8'
     compile 'de.hdodenhof:circleimageview:1.2.2'
     compile 'com.jpardogo.materialtabstrip:library:1.0.3'
-    compile 'com.balysv:material-ripple:0.9.3-SNAPSHOT@aar'
+    compile 'com.balysv:material-ripple:1.0.2'
     compile 'com.afollestad:material-dialogs:0.7.3.0'
     compile 'com.github.machinarius:preferencefragment:0.1.1'
 }
